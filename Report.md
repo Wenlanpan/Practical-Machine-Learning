@@ -115,6 +115,12 @@ Accuracy=rbind(cmRF$overall[1],cmCART$overall[1],cmGBM$overall[1])
 )
 print(AccuracyResults)
 ```
+```r
+  Model  Accuracy
+1    RF 0.9950722
+2  CART 0.4910790
+3   GBM 0.9658454
+```
 The most accurate model is Random Forest
 ```r
 cmRF
@@ -157,4 +163,8 @@ Balanced Accuracy      0.9987   0.9952   0.9954   0.9963   0.9979
 ```r
 result <- predict(modelRF, testingCleaned[, -length(names(testingCleaned))])
 result
+```
+```r
+ [1] B A B A A E D B A A B C B A E E A B B B
+Levels: A B C D E
 ```
