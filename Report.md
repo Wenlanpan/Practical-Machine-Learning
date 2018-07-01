@@ -31,14 +31,96 @@ trainUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.cs
 testUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
 ```
 ### Read Data
+```r
+training <- read.csv(url(trainUrl), na.strings=c("NA","#DIV/0!",""))
+testing <- read.csv(url(testUrl), na.strings=c("NA","#DIV/0!",""))
+```
 ### Clean Data
+Remove columns that contain NA missing values
+```r
+training <- training[,colSums(is.na(training))==0]
+testing <- testing[,colSums(is.na(testing))==0]
+```
+Remove columns of non-accelerometer measurements
+```r
+classe <- training$classe
+trainingRemoved <- grepl("^X|timestamp|window", names(training))
+training <- training[,!trainingRemoved]
+trainingCleaned <- training[, sapply(training, is.numeric)]
+trainingCleaned$classe <- classe
+testingRemoved <- grepl("^X|timestamp|window", names(testing))
+testing <- testing[,!testingRemoved]
+testingCleaned <- testing[, sapply(testing, is.numeric)]
+```
+Remove NearZeroVariance
+```r
+nzv <- nearZeroVar(trainingCleaned, saveMetrics=TRUE)
+trainingCleaned <- trainingCleaned[,nzv$nzv==FALSE]
+nzv <- nearZeroVar(testingCleaned,saveMetrics=TRUE)
+testingCleaned <- testingCleaned[,nzv$nzv==FALSE]
+```
+Cleaned training set: 19622 observations and 53 variables<br>
+Cleaned testing set: 20 observations and 53 variables
 ### Portion Data
+Splicing training data set into 2 data sets, 70% for myTraining, 40% for myTesting
+```r
+inTrain <- createDataPartition(y=trainingCleaned$classe, p=0.7, list=FALSE)
+myTraining <- trainingCleaned[inTrain,]
+myTesting <- trainingCleaned[-inTrain,]
+```
 ## Data Modeling
+3 different model algorithms were tested
+
+Random forest decision trees (rf)
+Decision trees with CART (rpart)
+Gradient Boosting trees (gbm)
+Cross Validation: 5-fold
+```r
+fitControl <- trainControl(method="cv",number=5)
+modelRF <- train(
+classe ~.,
+data=myTraining,
+trControl=fitControl,
+method="rf",
+ntree=100
+)
+save(modelRF, file="./ModelFitRF.RData")
+modelCART <- train(
+classe ~.,
+data=myTraining,
+trControl=fitControl,
+method="rpart"
+)
+save(modelCART, file="./ModelFitCART.RData")
+modelGBM <- train(
+classe ~.,
+data=myTraining,
+trControl=fitControl,
+method="gbm"
+)
+save(modelGBM, file="./ModelFitGBM.RData")
+
+```
 ## Model Validation (Out-of-sample error)
+```r
+predictRF <- predict(modelRF, newdata=myTesting)
+cmRF <- confusionMatrix(predictRF, myTesting$classe)
+predictCART <- predict(modelCART, newdata=myTesting)
+cmCART <- confusionMatrix(predictCART, myTesting$classe)
+predictGBM <- predict(modelGBM, newdata=myTesting)
+cmGBM <- confusionMatrix(predictGBM, myTesting$classe)
+AccuracyResults <- data.frame(
+Model=c("RF","CART","GBM"),
+Accuracy=rbind(cmRF$overall[1],cmCART$overall[1],cmGBM$overall[1])
+)
+print(AccuracyResults)
+```
+The most accurate model is Random Forest
+```r
+cmRF
+```
 ## Model Testing
 ```r
 result <- predict(modelRF, testingCleaned[, -length(names(testingCleaned))])
 result
 ```
-[1] B A B A A E D B A A B C B A E E A B B B
-Levels: A B C D E
