@@ -20,6 +20,10 @@ Load required package
             library(rattle)
             library(gbm)
 ```
+Load the same seed
+```
+set.seed(1)
+```
 ## Data Processing
 ## Data Modeling
 ## Model Validation (Out-of-sample error)
