@@ -9,6 +9,169 @@
 
 </head>
 <body>
+    <div class="container-fluid">
+        <h1>Practical Machine Learning - Prediction Assignment Writeup</h1>
+        <h2>Background</h2>
+        <hr>
+        <p>Using devices such as <i>Jawbone Up, Nike FuelBand, and Fitbit</i> it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: <a href="http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har">http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har</a> (see the section on the Weight Lifting Exercise Dataset).
+        </p>
+        <h2>Data</h2>
+        <hr>
+        <p>The training data for this project are available here:
+
+            <a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv</a>
+
+        </p>
+        <p>
+            The test data are available here:
+
+            <a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv</a>
+        </p>
+        <p>
+            The data for this project come from this source: <a href="http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har">http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har</a>. If you use the document you create for this class for any purpose please cite them as they have been very generous in allowing their data to be used for this kind of assignment.
+        </p>
+
+        <h2>Data Preprocessing</h2>
+        <hr>
+        <p>Load required package</p>
+        <pre>
+            library(caret)
+            library(rpart）
+            library(rpart.plot)
+            library(randomForest)
+            library(corrplot)
+            library(rattle)
+            library(gbm)
+        </pre>
+        <p>Load the same seed</p>
+        <pre>
+            set.seed(1)
+        </pre>
+
+        <h2>Data Processing</h2>
+        <hr>
+        <h3>Download Data</h3>
+        <pre>
+            trainUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+            testUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+        </pre>
+        <h3>Read Data</h3>
+        <pre>
+            training <- read.csv(url(trainUrl), na.strings=c("NA","#DIV/0!",""))
+            testing <- read.csv(url(testUrl), na.strings=c("NA","#DIV/0!",""))
+        </pre>
+        <h3>Clean Data</h3>
+        <p>Remove columns that contain NA missing values</p>
+        <pre>
+            training <- training[,colSums(is.na(training))==0]
+            testing <- testing[,colSums(is.na(testing))==0]
+        </pre>
+
+        <p>Remove columns of non-accelerometer measurements </p>
+        <pre>
+            classe <- training$classe
+            trainingRemoved <- grepl("^X|timestamp|window", names(training))
+            training <- training[,!trainingRemoved]
+            trainingCleaned <- training[, sapply(training, is.numeric)]
+            trainingCleaned$classe <- classe
+            testingRemoved <- grepl("^X|timestamp|window", names(testing))
+            testing <- testing[,!testingRemoved]
+            testingCleaned <- testing[, sapply(testing, is.numeric)]
+        </pre>
+        <p>Remove NearZeroVariance</p>
+        <pre>
+            nzv <- nearZeroVar(trainingCleaned, saveMetrics=TRUE)
+            trainingCleaned <- trainingCleaned[,nzv$nzv==FALSE]
+            nzv <- nearZeroVar(testingCleaned,saveMetrics=TRUE)
+            testingCleaned <- testingCleaned[,nzv$nzv==FALSE]
+        </pre>
+        <p>Cleaned training set: 19622 observations and 53 variables<br>
+            Cleaned testing set: 20 observations and 53 variables
+        </p>
+        <h3>Portion Data</h3>
+        <p>Splicing training data set into 2 data sets, 70% for myTraining, 40% for myTesting</p>
+        <pre>
+            inTrain <- createDataPartition(y=trainingCleaned$classe, p=0.7, list=FALSE)
+            myTraining <- trainingCleaned[inTrain,]
+            myTesting <- trainingCleaned[-inTrain,]
+        </pre>
+
+        <h2>Data Modeling</h2>
+        <hr>
+        <p>
+            3 different model algorithms were tested
+        <ol>
+        <li>Random forest decision trees (rf)</li>
+        <li>Decision trees with CART (rpart)</li>
+        <li>Gradient Boosting trees (gbm)</li>
+    </ol></p>
+        <p>Cross Validation: 5-fold</p>
+        <pre>
+            fitControl <- trainControl(method="cv",number=5)
+            modelRF <- train(
+            classe ~.,
+            data=myTraining,
+            trControl=fitControl,
+            method="rf",
+            ntree=100
+            )
+            save(modelRF, file="./ModelFitRF.RData")
+            modelCART <- train(
+            classe ~.,
+            data=myTraining,
+            trControl=fitControl,
+            method="rpart"
+            )
+            save(modelCART, file="./ModelFitCART.RData")
+            modelGBM <- train(
+            classe ~.,
+            data=myTraining,
+            trControl=fitControl,
+            method="gbm"
+            )
+            save(modelGBM, file="./ModelFitGBM.RData")
+        </pre>
+        <h2>Model Validation (Out-of-sample error)</h2>
+        <hr>
+        <pre>
+            predictRF <- predict(modelRF, newdata=myTesting)
+            cmRF <- confusionMatrix(predictRF, myTesting$classe)
+            predictCART <- predict(modelCART, newdata=myTesting)
+            cmCART <- confusionMatrix(predictCART, myTesting$classe)
+            predictGBM <- predict(modelGBM, newdata=myTesting)
+            cmGBM <- confusionMatrix(predictGBM, myTesting$classe)
+            AccuracyResults <- data.frame(
+            Model=c("RF","CART","GBM"),
+            Accuracy=rbind(cmRF$overall[1],cmCART$overall[1],cmGBM$overall[1])
+            )
+            print(AccuracyResults)
+        </pre>
+        <samp>
+            &nbsp Model  Accuracy <br>
+            1    RF 0.9950722<br>
+            2  CART 0.4910790<br>
+            3   GBM 0.9658454
+        </samp>
+        <p>The most accurate model is <b>Random Forest</b></p>
+        <pre>
+            cmRF
+        </pre>
+        <p>Confusion Matrix of Random Forest</p>
+        <img src="figure/confusionMatrix">
+
+        <h2>Model Testing</h2>
+        <hr>
+        <pre>
+            result <- predict(modelRF, testingCleaned[, -length(names(testingCleaned))])
+            result
+        </pre>
+        <samp>
+            [1] B A B A A E D B A A B C B A E E A B B B<br>
+            Levels: A B C D E
+
+        </samp>
+
+    </div>
 
 </body>
 </html>
