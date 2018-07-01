@@ -12,16 +12,16 @@ The data for this project come from this source: http://web.archive.org/web/2016
 ## Data Preprocessing
 Load required package
 ```R
-            library(caret)
-            library(rpart）
-            library(rpart.plot)
-            library(randomForest)
-            library(corrplot)
-            library(rattle)
-            library(gbm)
+library(caret)
+library(rpart）
+library(rpart.plot)
+library(randomForest)
+library(corrplot)
+library(rattle)
+library(gbm)
 ```
 Load the same seed
-```
+```r
 set.seed(1)
 ```
 ## Data Processing
