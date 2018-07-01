@@ -11,7 +11,7 @@ The data for this project come from this source: http://web.archive.org/web/2016
 
 ## Data Preprocessing
 Load required package
-```R
+```r
 library(caret)
 library(rpart）
 library(rpart.plot)
@@ -25,6 +25,20 @@ Load the same seed
 set.seed(1)
 ```
 ## Data Processing
+### Download Data
+```r
+trainUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+testUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+```
+### Read Data
+### Clean Data
+### Portion Data
 ## Data Modeling
 ## Model Validation (Out-of-sample error)
 ## Model Testing
+```r
+result <- predict(modelRF, testingCleaned[, -length(names(testingCleaned))])
+result
+```
+[1] B A B A A E D B A A B C B A E E A B B B
+Levels: A B C D E
