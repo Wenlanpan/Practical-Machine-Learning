@@ -71,10 +71,10 @@ myTesting <- trainingCleaned[-inTrain,]
 ## Data Modeling
 3 different model algorithms were tested
 
-Random forest decision trees (rf)
-Decision trees with CART (rpart)
-Gradient Boosting trees (gbm)
-Cross Validation: 5-fold
+Random forest decision trees (rf)<br>
+Decision trees with CART (rpart)<br>
+Gradient Boosting trees (gbm)<br>
+Cross Validation: 5-fold<br>
 ```r
 fitControl <- trainControl(method="cv",number=5)
 modelRF <- train(
@@ -118,6 +118,40 @@ print(AccuracyResults)
 The most accurate model is Random Forest
 ```r
 cmRF
+```
+```r
+Confusion Matrix and Statistics
+
+          Reference
+Prediction    A    B    C    D    E
+         A 1672    6    0    0    0
+         B    1 1130    5    0    2
+         C    1    2 1018    4    0
+         D    0    1    3  958    2
+         E    0    0    0    2 1078
+
+Overall Statistics
+                                          
+               Accuracy : 0.9951          
+                 95% CI : (0.9929, 0.9967)
+    No Information Rate : 0.2845          
+    P-Value [Acc > NIR] : < 2.2e-16       
+                                          
+                  Kappa : 0.9938          
+ Mcnemar's Test P-Value : NA              
+
+Statistics by Class:
+
+                     Class: A Class: B Class: C Class: D Class: E
+Sensitivity            0.9988   0.9921   0.9922   0.9938   0.9963
+Specificity            0.9986   0.9983   0.9986   0.9988   0.9996
+Pos Pred Value         0.9964   0.9930   0.9932   0.9938   0.9981
+Neg Pred Value         0.9995   0.9981   0.9984   0.9988   0.9992
+Prevalence             0.2845   0.1935   0.1743   0.1638   0.1839
+Detection Rate         0.2841   0.1920   0.1730   0.1628   0.1832
+Detection Prevalence   0.2851   0.1934   0.1742   0.1638   0.1835
+Balanced Accuracy      0.9987   0.9952   0.9954   0.9963   0.9979
+
 ```
 ## Model Testing
 ```r
